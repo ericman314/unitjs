@@ -1,5 +1,5 @@
 import babel from 'rollup-plugin-babel'
-import resolve from 'rollup-plugin-node-resolve'
+import typescript from 'rollup-plugin-typescript2'
 import commonjs from 'rollup-plugin-commonjs'
 import { terser } from 'rollup-plugin-terser'
 
@@ -24,8 +24,25 @@ const babelOptions = {
   ]
 }
 
+const tsOptions = {
+  check: true,
+  abortOnError: true
+}
+
+const tsOptionsDeclaration = {
+  ...tsOptions,
+  useTsconfigDeclarationDir: true,
+  tsconfigOverride: {
+    compilerOptions: {
+      declaration: true,
+      emitDeclarationOnly: true,
+      outFile: 'es/UnitMath.d.ts'
+    }
+  }
+}
+
 const name = 'UnitMath'
-const input = 'src/Unit.js'
+const input = 'src/Unit.ts'
 
 export default [
   // UMD build
@@ -36,9 +53,11 @@ export default [
       file: 'dist/UnitMath.js',
       format: 'umd'
     },
-    plugins: [babel(babelOptions),
-      resolve(),
-      commonjs()]
+    plugins: [
+      typescript(tsOptions),
+      babel(babelOptions),
+      commonjs()
+    ]
   },
   // minified UMD build
   {
@@ -50,8 +69,8 @@ export default [
       name
     },
     plugins: [
+      typescript(tsOptions),
       babel(babelOptions),
-      resolve(),
       commonjs(),
       terser(teserOptions)
     ]
@@ -66,6 +85,7 @@ export default [
       name
     },
     plugins: [
+      typescript(tsOptions),
       terser(teserOptions)
     ]
   },
@@ -75,7 +95,17 @@ export default [
     output: {
       file: 'es/UnitMath.js',
       format: 'es'
-    }
+    },
+    plugins: [
+      typescript(tsOptions)
+    ]
+  },
+  // d.ts build
+  {
+    input,
+    plugins: [
+      typescript(tsOptionsDeclaration)
+    ]
   },
   // minified es build
   {
@@ -85,6 +115,9 @@ export default [
       format: 'es',
       indent: false
     },
-    plugins: [ terser(teserOptions) ]
+    plugins: [
+      typescript(tsOptions),
+      terser(teserOptions)
+    ]
   }
 ]
